@@ -1,0 +1,8 @@
+*\#*
+*~
+*.o
+*.su
+*.gcov
+*.gcno
+*.gcda
+/bsum

@@ -1,0 +1,72 @@
+.TH BSUM 1 blakesum
+.SH NAME
+bsum - Compute and check BLAKE message digests
+.SH SYNOPSIS
+.B bsum
+[-l bits] [-c | -B | -L | -U] [-xz]
+.RI [ file "] ..."
+.SH DESCRIPTION
+Print or check BLAKE checksums.
+.SH OPTIONS
+The
+.B bsum
+utility conforms to the Base Definitions volume of POSIX.1-2017,
+.IR "Section 12.2" ,
+.IR "Utility Syntax Guidelines" .
+.PP
+The following options are supported:
+.TP
+.B -B
+Output checksums in binary representation. This suppresses
+the filenames and checksum delimiters. Only the checksums
+are printed.
+.TP
+.B -c
+Read BLAKE sums from the file and check them against the
+files on your systems. The input files files should be
+formatted as the output of this program, or similarly.
+This is not going to work if any of the filenames in the
+input files starts with <space> or <tab>, or if they
+contain a <newline, unless the
+.B -z
+option is also used.
+.TP
+.B -L
+Output checksums in lower-case hexadecimal representation. (Default)
+.TP
+.B -l
+Select version of the BLAKE algorithm. Valid values
+are 224 (default), 256, 384, and 512.
+.TP
+.B -U
+Output checksums in upper-case hexadecimal representation.
+.TP
+.B -x
+Convert input files from hexadecimal form to binary form
+before calculating the checksums.
+.TP
+.B -z
+Lines end with NUL instead of LF. If used with
+.BR -c ,
+this applies to read files (not the output), but it will
+also apply more strict parsing and allow any whitespace
+in file names.
+.SH OPERANDS
+The following operands are supported:
+.TP
+.I file
+File to read. The standard input will be used
+.B -
+or no
+.I file
+is specified.
+.SH EXIT STATUS
+.TP
+0
+Successful completion.
+.TP
+1
+Checksums did not match or a file did not exist.
+.TP
+2
+An error occurred.
