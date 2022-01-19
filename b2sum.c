@@ -20,7 +20,8 @@ static void
 usage(void)
 {
 	/* TODO add support for key, salt, and personalization */
-	/* TODO add support for parallel versions  */
+	/* TODO add support for parallel versions */
+	/* TODO add support for tree hashing */
 	fprintf(stderr, "usage: %s [-l bits | -X bits] [-c | -B | -L | -U] [-sxz] [file] ...", argv0);
 	exit(2);
 }
@@ -100,7 +101,7 @@ hash_fd_blake2bs(int fd, const char *fname, int decode_hex, unsigned char hash[]
 }
 
 static int
-hash_fd_blake2bsx(int fd, const char *fname, int decode_hex, unsigned char hash[])
+hash_fd_blake2xbs(int fd, const char *fname, int decode_hex, unsigned char hash[])
 {
 	struct libblake_blake2xb_state state2xb;
 	struct libblake_blake2xb_params params2xb;
@@ -173,7 +174,7 @@ hash_fd_blake2bsx(int fd, const char *fname, int decode_hex, unsigned char hash[
 	else
 		libblake_blake2xb_predigest(&state2xb, buf, len, 0);
 	if (flag_small) {
-		for (i = 0; i * 32 < hashlen / 8; i++) { /* TODO this could be done parallel (also below) */
+		for (i = 0; i * 32 < hashlen / 8; i++) { /* TODO this could be done parallel (but align hash) (also below) */
 			n = (i + 1) * 32 > hashlen / 8 ? hashlen / 8 - i * 32 : 32;
 			libblake_blake2xs_digest(&state2xs, (uint_least32_t)i, (uint_least8_t)n, &hash[i * 32]);
 		}
@@ -193,7 +194,7 @@ hash_fd(int fd, const char *fname, int decode_hex, unsigned char hash[])
 	int ret;
 
 	if (flag_extended)
-		ret = hash_fd_blake2bsx(fd, fname, decode_hex, hash);
+		ret = hash_fd_blake2xbs(fd, fname, decode_hex, hash);
 	else
 		ret = hash_fd_blake2bs(fd, fname, decode_hex, hash);
 
