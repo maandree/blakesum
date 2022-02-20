@@ -45,13 +45,13 @@ hash_fd_blake2bs(int fd, const char *fname, int decode_hex, unsigned char hash[]
 		params2s.digest_len = (uint_least8_t)length;
 		params2s.fanout = 1;
 		params2s.depth = 1;
-		libblake_blake2s_init(&state2s, &params2s, NULL);
+		libblake_blake2s_init(&state2s, &params2s);
 	} else {
 		memset(&params2b, 0, sizeof(params2b));
 		params2b.digest_len = (uint_least8_t)length;
 		params2b.fanout = 1;
 		params2b.depth = 1;
-		libblake_blake2b_init(&state2b, &params2b, NULL);
+		libblake_blake2b_init(&state2b, &params2b);
 	}
 	for (;;) {
 		if (len == size)
@@ -121,14 +121,14 @@ hash_fd_blake2xbs(int fd, const char *fname, int decode_hex, unsigned char hash[
 		params2xs.fanout = 1;
 		params2xs.depth = 1;
 		params2xs.xof_len = (uint_least16_t)xlength;
-		libblake_blake2xs_init(&state2xs, &params2xs, NULL);
+		libblake_blake2xs_init(&state2xs, &params2xs);
 	} else {
 		memset(&params2xb, 0, sizeof(params2xb));
 		params2xb.digest_len = (uint_least8_t)length;
 		params2xb.fanout = 1;
 		params2xb.depth = 1;
 		params2xb.xof_len = (uint_least32_t)xlength;
-		libblake_blake2xb_init(&state2xb, &params2xb, NULL);
+		libblake_blake2xb_init(&state2xb, &params2xb);
 	}
 	for (;;) {
 		if (len == size)
