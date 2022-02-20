@@ -15,6 +15,12 @@ HDR =\
 	arg.h\
 	common.h
 
+ALIASES =\
+	b224sum\
+	b256sum\
+	b384sum\
+	b512sum
+
 all: $(BIN)
 $(OBJ): $(HDR)
 
@@ -35,25 +41,11 @@ install: $(BIN)
 	ln -sf -- bsum "$(DESTDIR)$(PREFIX)/bin/b256sum"
 	ln -sf -- bsum "$(DESTDIR)$(PREFIX)/bin/b384sum"
 	ln -sf -- bsum "$(DESTDIR)$(PREFIX)/bin/b512sum"
-	cp -- $(BIN:=.1) "$(DESTDIR)$(MANPREFIX)/man1/"
-	cp -- b224sum.1 "$(DESTDIR)$(MANPREFIX)/man1/b224sum.1"
-	cp -- b256sum.1 "$(DESTDIR)$(MANPREFIX)/man1/b256sum.1"
-	cp -- b384sum.1 "$(DESTDIR)$(MANPREFIX)/man1/b384sum.1"
-	cp -- b512sum.1 "$(DESTDIR)$(MANPREFIX)/man1/b512sum.1"
+	cp -- $(BIN:=.1) $(ALIASES:=.1) "$(DESTDIR)$(MANPREFIX)/man1/"
 
 uninstall:
-	-rm -f -- "$(DESTDIR)$(PREFIX)/bin/bsum"
-	-rm -f -- "$(DESTDIR)$(PREFIX)/bin/b224sum"
-	-rm -f -- "$(DESTDIR)$(PREFIX)/bin/b256sum"
-	-rm -f -- "$(DESTDIR)$(PREFIX)/bin/b384sum"
-	-rm -f -- "$(DESTDIR)$(PREFIX)/bin/b512sum"
-	-rm -f -- "$(DESTDIR)$(PREFIX)/bin/b2sum"
-	-rm -f -- "$(DESTDIR)$(MANPREFIX)/man1/bsum.1"
-	-rm -f -- "$(DESTDIR)$(MANPREFIX)/man1/b224sum.1"
-	-rm -f -- "$(DESTDIR)$(MANPREFIX)/man1/b256sum.1"
-	-rm -f -- "$(DESTDIR)$(MANPREFIX)/man1/b384sum.1"
-	-rm -f -- "$(DESTDIR)$(MANPREFIX)/man1/b512sum.1"
-	-rm -f -- "$(DESTDIR)$(MANPREFIX)/man1/b2sum.1"
+	-cd -- "$(DESTDIR)$(PREFIX)/bin/" && rm -f -- $(BIN) $(ALIASES)
+	-cd -- "$(DESTDIR)$(MANPREFIX)/man1/" && rm -f -- $(BIN:=.1) $(ALIASES:=.1)
 
 clean:
 	-rm -f -- *.o *.su *.gcov *.gcno *.gcda
