@@ -38,9 +38,11 @@ get_lenght_by_command_name(const char *command)
 }
 
 static int
-hash_fd_blake224(int fd, const char *fname, int decode_hex, unsigned char hash[])
+hash_fd_blake(int fd, const char *fname, int decode_hex, unsigned char hash[], void *state,
+              void (*init_func)(void *state), size_t (*update_func)(void *state, const void *msg, size_t n),
+              size_t (*get_buf_size_func)(size_t bytes, size_t bits, const char *suffix),
+              void (*digest_func)(void *state, void *msg, size_t bytes, size_t bits, const char *suffix, unsigned char out[]))
 {
-	struct libblake_blake224_state state;
 	char *buf = NULL;
 	size_t size = 0;
 	size_t len = 0;
@@ -48,7 +50,7 @@ hash_fd_blake224(int fd, const char *fname, int decode_hex, unsigned char hash[]
 	size_t req;
 	ssize_t r;
 	int ok;
-	libblake_blake224_init(&state);
+	init_func(state);
 	for (;;) {
 		if (len == size)
 			buf = erealloc(buf, size += 8 << 10);
@@ -64,7 +66,7 @@ hash_fd_blake224(int fd, const char *fname, int decode_hex, unsigned char hash[]
 		}
 		len += (size_t)r;
 		if (!decode_hex) {
-			off += libblake_blake224_update(&state, &buf[off], len - off);
+			off += update_func(state, &buf[off], len - off);
 			if (off == len)
 				off = 0;
 		}
@@ -79,162 +81,56 @@ hash_fd_blake224(int fd, const char *fname, int decode_hex, unsigned char hash[]
 			return -1;
 		}
 	}
-	req = libblake_blake224_digest_get_required_input_size(len, 0, NULL);
+	req = get_buf_size_func(len, 0, NULL);
 	if (req > size)
 		buf = erealloc(buf, size);
-	libblake_blake224_digest(&state, buf, len, 0, NULL, hash);
+	libblake_blake224_digest(state, buf, len, 0, NULL, hash);
 	free(buf);
 	return 0;
+}
+
+static int
+hash_fd_blake224(int fd, const char *fname, int decode_hex, unsigned char hash[])
+{
+	struct libblake_blake224_state state;
+	return hash_fd_blake(fd, fname, decode_hex, hash, &state,
+	                     (void (*)(void *))&libblake_blake224_init,
+	                     (size_t (*)(void *, const void *, size_t))&libblake_blake224_update,
+	                     &libblake_blake224_digest_get_required_input_size,
+	                     (void (*)(void *, void *, size_t, size_t, const char *, unsigned char[]))&libblake_blake224_digest);
 }
 
 static int
 hash_fd_blake256(int fd, const char *fname, int decode_hex, unsigned char hash[])
 {
 	struct libblake_blake256_state state;
-	char *buf = NULL;
-	size_t size = 0;
-	size_t len = 0;
-	size_t off = 0;
-	size_t req;
-	ssize_t r;
-	int ok;
-	libblake_blake256_init(&state);
-	for (;;) {
-		if (len == size)
-			buf = erealloc(buf, size += 8 << 10);
-		r = read(fd, &buf[len], size - len);
-		if (r <= 0) {
-			if (!r)
-				break;
-			if (errno == EINTR)
-				continue;
-			fprintf(stderr, "%s: %s: %s\n", argv0, fname, strerror(errno));
-			free(buf);
-			return -1;
-		}
-		len += (size_t)r;
-		if (!decode_hex) {
-			off += libblake_blake256_update(&state, &buf[off], len - off);
-			if (off == len)
-				off = 0;
-		}
-	}
-	if (off)
-		memmove(&buf[0], &buf[off], len -= off);
-	if (decode_hex) {
-		len = libblake_decode_hex(buf, len, buf, &ok);
-		if (!ok) {
-			fprintf(stderr, "%s: %s: %s\n", argv0, fname, "invalid hexadecimal input");
-			free(buf);
-			return -1;
-		}
-	}
-	req = libblake_blake256_digest_get_required_input_size(len, 0, NULL);
-	if (req > size)
-		buf = erealloc(buf, size);
-	libblake_blake256_digest(&state, buf, len, 0, NULL, hash);
-	free(buf);
-	return 0;
+	return hash_fd_blake(fd, fname, decode_hex, hash, &state,
+	                     (void (*)(void *))&libblake_blake256_init,
+	                     (size_t (*)(void *, const void *, size_t))&libblake_blake256_update,
+	                     &libblake_blake256_digest_get_required_input_size,
+	                     (void (*)(void *, void *, size_t, size_t, const char *, unsigned char[]))&libblake_blake256_digest);
 }
 
 static int
 hash_fd_blake384(int fd, const char *fname, int decode_hex, unsigned char hash[])
 {
 	struct libblake_blake384_state state;
-	char *buf = NULL;
-	size_t size = 0;
-	size_t len = 0;
-	size_t off = 0;
-	size_t req;
-	ssize_t r;
-	int ok;
-	libblake_blake384_init(&state);
-	for (;;) {
-		if (len == size)
-			buf = erealloc(buf, size += 8 << 10);
-		r = read(fd, &buf[len], size - len);
-		if (r <= 0) {
-			if (!r)
-				break;
-			if (errno == EINTR)
-				continue;
-			fprintf(stderr, "%s: %s: %s\n", argv0, fname, strerror(errno));
-			free(buf);
-			return -1;
-		}
-		len += (size_t)r;
-		if (!decode_hex) {
-			off += libblake_blake384_update(&state, &buf[off], len - off);
-			if (off == len)
-				off = 0;
-		}
-	}
-	if (off)
-		memmove(&buf[0], &buf[off], len -= off);
-	if (decode_hex) {
-		len = libblake_decode_hex(buf, len, buf, &ok);
-		if (!ok) {
-			fprintf(stderr, "%s: %s: %s\n", argv0, fname, "invalid hexadecimal input");
-			free(buf);
-			return -1;
-		}
-	}
-	req = libblake_blake384_digest_get_required_input_size(len, 0, NULL);
-	if (req > size)
-		buf = erealloc(buf, size);
-	libblake_blake384_digest(&state, buf, len, 0, NULL, hash);
-	free(buf);
-	return 0;
+	return hash_fd_blake(fd, fname, decode_hex, hash, &state,
+	                     (void (*)(void *))&libblake_blake384_init,
+	                     (size_t (*)(void *, const void *, size_t))&libblake_blake384_update,
+	                     &libblake_blake384_digest_get_required_input_size,
+	                     (void (*)(void *, void *, size_t, size_t, const char *, unsigned char[]))&libblake_blake384_digest);
 }
 
 static int
 hash_fd_blake512(int fd, const char *fname, int decode_hex, unsigned char hash[])
 {
 	struct libblake_blake512_state state;
-	char *buf = NULL;
-	size_t size = 0;
-	size_t len = 0;
-	size_t off = 0;
-	size_t req;
-	ssize_t r;
-	int ok;
-	libblake_blake512_init(&state);
-	for (;;) {
-		if (len == size)
-			buf = erealloc(buf, size += 8 << 10);
-		r = read(fd, &buf[len], size - len);
-		if (r <= 0) {
-			if (!r)
-				break;
-			if (errno == EINTR)
-				continue;
-			fprintf(stderr, "%s: %s: %s\n", argv0, fname, strerror(errno));
-			free(buf);
-			return -1;
-		}
-		len += (size_t)r;
-		if (!decode_hex) {
-			off += libblake_blake512_update(&state, &buf[off], len - off);
-			if (off == len)
-				off = 0;
-		}
-	}
-	if (off)
-		memmove(&buf[0], &buf[off], len -= off);
-	if (decode_hex) {
-		len = libblake_decode_hex(buf, len, buf, &ok);
-		if (!ok) {
-			fprintf(stderr, "%s: %s: %s\n", argv0, fname, "invalid hexadecimal input");
-			free(buf);
-			return -1;
-		}
-	}
-	req = libblake_blake512_digest_get_required_input_size(len, 0, NULL);
-	if (req > size)
-		buf = erealloc(buf, size);
-	libblake_blake512_digest(&state, buf, len, 0, NULL, hash);
-	free(buf);
-	return 0;
+	return hash_fd_blake(fd, fname, decode_hex, hash, &state,
+	                     (void (*)(void *))&libblake_blake512_init,
+	                     (size_t (*)(void *, const void *, size_t))&libblake_blake512_update,
+	                     &libblake_blake512_digest_get_required_input_size,
+	                     (void (*)(void *, void *, size_t, size_t, const char *, unsigned char[]))&libblake_blake512_digest);
 }
 
 int
