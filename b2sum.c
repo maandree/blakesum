@@ -19,7 +19,7 @@ static size_t hashlen;
 static void
 usage(void)
 {
-	/* TODO add support for key, salt, and personalization */
+	/* TODO add support for key (-K), salt (-S), and personalization (-P) */
 	/* TODO add support for parallel versions */
 	/* TODO add support for tree hashing */
 	fprintf(stderr, "usage: %s [-l bits | -X bits] [-c | -B | -L | -U] [-sxz] [file] ...", argv0);

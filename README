@@ -1,0 +1,94 @@
+NAME
+	blakesum - Checksum utilities for the BLAKE-family of hashing functions
+
+SYNOPSIS
+	bsum [-l bits] [-c | -B | -L | -U] [-xz] [file] ...
+	b224sum [-c | -B | -L | -U] [-xz] [file] ...
+	b256sum [-c | -B | -L | -U] [-xz] [file] ...
+	b384sum [-c | -B | -L | -U] [-xz] [file] ...
+	b512sum [-c | -B | -L | -U] [-xz] [file] ...
+	bsum [-l bits | -X bits] [-c | -B | -L | -U] [-sxz] [file] ...
+
+DESCRIPTION
+	Print or check BLAKE, BLAKE2, or BLAKE2X checksums.
+
+	bsum is used for BLAKE2 checksums, and b2sum is used for
+	BLAKE2 and BLAKE2X checksums.
+
+	b224sum is an alias for bsum -l 224.
+
+	b256sum is an alias for bsum -l 256.
+
+	b384sum is an alias for bsum -l 384.
+
+	b512sum is an alias for bsum -l 512.
+
+OPTIONS
+	The following options are supported:
+
+	-B	Output checksums in binary representation. This
+		suppresses the filenames and checksum delimiters.
+		Only the checksums are printed.
+
+	-c	Read checksums from the file and check them against
+		the files on your systems. The input files files
+		should be formatted as the output of the program,
+		or similarly. This is not going to work if any of
+		the filenames in the input files starts with <space>
+		or <tab>, or if they contain a <newline>, unless the
+		-z option is also used.
+
+	-L	Output checksums in lower-case hexadecimal
+		representation. (Default)
+
+	-l bits
+		For bsum:
+			Select version of the BLAKE algorithm. Valid
+			values are 224 (default), 256, 384, and 512.
+
+		For b2sum:
+			Select output size, valid values are multiples
+			of 8 between 8 and 512, inclusively, or if
+			the -s option is used between 8 and 256,
+			inclusively. (Default is maximum.)
+
+	-s	(Only available in b2sum)
+		Use BLAKE2s instead of BLAKE2b.
+
+	-U	Output checksums in upper-case hexadecimal
+		representation.
+
+	-X bits
+		(Only available in b2sum)
+		Use BLAKE2Xb instead of BLAKE2b or BLAKE2Xs instead
+		of BLAKE2s, and select the extended output function
+		output length, in bits; must be a non-zero multiple
+		of 8, and no greater than 34359738360 or (if the -s
+		option is used) 524280.
+
+	-x	Convert input files from hexadecimal form to binary
+		form before calculating the checksums.
+
+	-z	Lines end with NUL instead of LF. If used with -c,
+		this applies to read files (not the output), but it
+		will also apply more strict parsing and allow any
+		whitespace in file names.
+
+OPERANDS
+	The following operands are supported:
+
+	file	File to read. The standard input will be used - or no
+		file is specified.
+
+EXIT STATUS
+	0	Successful completion.
+
+	1	Checksums did not match or a file did not exist.
+
+	2	An error occurred.
+
+NOTES
+	BLAKE2X has not been finalised as of 2022-02-20.
+
+SEE ALSO
+	sha3sum, sha256sum(1), sha512sum(1)

@@ -2,7 +2,7 @@
 .SH NAME
 b2sum - Compute and check BLAKE2 message digests
 .SH SYNOPSIS
-.B bsum
+.B b2sum
 [-l bits | -X bits] [-c | -B | -L | -U] [-sxz]
 .RI [ file "] ..."
 .SH DESCRIPTION
@@ -27,7 +27,7 @@ files on your systems. The input files files should be
 formatted as the output of this program, or similarly.
 This is not going to work if any of the filenames in the
 input files starts with <space> or <tab>, or if they
-contain a <newline, unless the
+contain a <newline>, unless the
 .B -z
 option is also used.
 .TP
@@ -49,7 +49,7 @@ Output checksums in upper-case hexadecimal representation.
 .TP
 .BI "-X " bits
 Use BLAKE2Xb instead of BLAKE2b or BLAKE2Xs instead of BLAKE2s,
-and select the extended output function output length, int bits,
+and select the extended output function output length, in bits;
 must be a non-zero multiple of 8, and no greater than
 34359738360 or (if the
 .B -s

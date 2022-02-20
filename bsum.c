@@ -16,6 +16,7 @@ static int length;
 static void
 usage(void)
 {
+	/* TODO add support for salt (-S) */
 	fprintf(stderr, "usage: %s%s [-c | -B | -L | -U] [-xz] [file] ...",
 	        argv0, lenght_by_command_name ? "" : " [-l bits]");
 	exit(2);
