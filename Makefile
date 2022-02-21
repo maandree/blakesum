@@ -9,7 +9,8 @@ BIN =\
 
 OBJ =\
 	$(BIN:=.o)\
-	common.o
+	common.o\
+	test.o
 
 HDR =\
 	arg.h\
@@ -21,7 +22,16 @@ ALIASES =\
 	b384sum\
 	b512sum
 
-all: $(BIN)
+# Known answers tests 
+KAT_FILES =\
+        kat/blake2b\
+        kat/blake2bp\
+        kat/blake2s\
+        kat/blake2sp\
+        kat/blake2xb\
+        kat/blake2xs
+
+all: $(BIN) test
 $(OBJ): $(HDR)
 
 .c.o:
@@ -32,6 +42,12 @@ bsum: bsum.o common.o
 
 b2sum: b2sum.o common.o
 	$(CC) -o $@ $@.o common.o $(LDFLAGS)
+
+test: test.o
+	$(CC) -o $@ $@.o $(LDFLAGS)
+
+check: test $(BIN) $(KAT_FILES)
+	./test
 
 install: $(BIN)
 	mkdir -p -- "$(DESTDIR)$(PREFIX)/bin"
@@ -49,9 +65,9 @@ uninstall:
 
 clean:
 	-rm -f -- *.o *.su *.gcov *.gcno *.gcda
-	-rm -f -- $(BIN)
+	-rm -f -- $(BIN) test
 
 .SUFFIXES:
 .SUFFIXES: .o .c
 
-.PHONY: all install uninstall clean
+.PHONY: all check install uninstall clean
