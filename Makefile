@@ -3,6 +3,7 @@
 CONFIGFILE = config.mk
 include $(CONFIGFILE)
 
+
 BIN =\
 	bsum\
 	b2sum
@@ -22,6 +23,11 @@ ALIASES =\
 	b384sum\
 	b512sum
 
+SRC =\
+	$(OBJ:.o=.c)\
+	$(HDR)\
+	test.c
+
 # Known answers tests 
 KAT_FILES =\
         kat/blake2b\
@@ -30,6 +36,7 @@ KAT_FILES =\
         kat/blake2sp\
         kat/blake2xb\
         kat/blake2xs
+
 
 all: $(BIN) test
 $(OBJ): $(HDR)

@@ -235,20 +235,22 @@ hashx(unsigned char **msg, size_t msglen, size_t *msgsize,
 		ERROR("Internal test error: %s\n", strerror(errno)); /* $covered$ */
 
 	if (!pid) {
+		/* $covered{$ */
 		close(input_pipe[1]);
 		close(output_pipe[0]);
 		if (input_pipe[0] != STDIN_FILENO) {
 			if (dup2(input_pipe[0], STDIN_FILENO) != STDIN_FILENO)
-				ERROR("Internal test error: %s\n", strerror(errno)); /* $covered$ */
+				ERROR("Internal test error: %s\n", strerror(errno));
 			close(input_pipe[0]);
 		}
 		if (output_pipe[1] != STDOUT_FILENO) {
 			if (dup2(output_pipe[1], STDOUT_FILENO) != STDOUT_FILENO)
-				ERROR("Internal test error: %s\n", strerror(errno)); /* $covered$ */
+				ERROR("Internal test error: %s\n", strerror(errno));
 			close(output_pipe[1]);
 		}
 		execv(argv[0], (void *const)argv);
-		ERROR("Internal test error: %s\n", strerror(errno)); /* $covered$ */
+		ERROR("Internal test error: %s\n", strerror(errno));
+		/* $covered}$ */
 
 	} else {
 		close(input_pipe[0]);
