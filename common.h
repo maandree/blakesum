@@ -19,6 +19,7 @@ void *emalloc(size_t n);
 int open_file(const char *path, int *closep);
 int check_and_print(const char *path, size_t hashlen, int decode_hex, char newline);
 int hash_and_print(const char *path, size_t hashlen, int decode_hex, char newline, int output_case);
+void parse_salt(uint_least8_t *salt, const char *s, size_t required_length);
 
 /* *sum.c */
 int hash_fd(int fd, const char *fname, int decode_hex, unsigned char hash[]);

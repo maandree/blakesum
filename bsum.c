@@ -12,12 +12,12 @@ static int flag_upper = 0;
 static int flag_hex = 0;
 static int flag_zero = 0;
 static int length;
+static void *salt = NULL;
 
 static void
 usage(void)
 {
-	/* TODO add support for salt (-S) */
-	fprintf(stderr, "usage: %s%s [-c | -B | -L | -U] [-xz] [file] ...",
+	fprintf(stderr, "usage: %s%s [-c | -B | -L | -U] [-S salt] [-xz] [file] ...",
 	        argv0, lenght_by_command_name ? "" : " [-l bits]");
 	exit(2);
 }
@@ -39,8 +39,8 @@ get_lenght_by_command_name(const char *command)
 }
 
 static int
-hash_fd_blake(int fd, const char *fname, int decode_hex, unsigned char hash[], void *state,
-              void (*init_func)(void *state), size_t (*update_func)(void *state, const void *msg, size_t n),
+hash_fd_blake(int fd, const char *fname, int decode_hex, unsigned char hash[], void *state, void *salt,
+              void (*init_func)(void *state, void *salt), size_t (*update_func)(void *state, const void *msg, size_t n),
               size_t (*get_buf_size_func)(size_t bytes, size_t bits, const char *suffix),
               void (*digest_func)(void *state, void *msg, size_t bytes, size_t bits, const char *suffix, unsigned char out[]))
 {
@@ -51,7 +51,7 @@ hash_fd_blake(int fd, const char *fname, int decode_hex, unsigned char hash[], v
 	size_t req;
 	ssize_t r;
 	int ok;
-	init_func(state);
+	init_func(state, salt);
 	for (;;) {
 		if (len == size)
 			buf = erealloc(buf, size += 8 << 10);
@@ -91,44 +91,44 @@ hash_fd_blake(int fd, const char *fname, int decode_hex, unsigned char hash[], v
 }
 
 static int
-hash_fd_blake224(int fd, const char *fname, int decode_hex, unsigned char hash[])
+hash_fd_blake224(int fd, const char *fname, int decode_hex, unsigned char hash[], void *salt)
 {
 	struct libblake_blake224_state state;
-	return hash_fd_blake(fd, fname, decode_hex, hash, &state,
-	                     (void (*)(void *))&libblake_blake224_init,
+	return hash_fd_blake(fd, fname, decode_hex, hash, &state, salt,
+	                     (void (*)(void *, void *))&libblake_blake224_init2,
 	                     (size_t (*)(void *, const void *, size_t))&libblake_blake224_update,
 	                     &libblake_blake224_digest_get_required_input_size,
 	                     (void (*)(void *, void *, size_t, size_t, const char *, unsigned char[]))&libblake_blake224_digest);
 }
 
 static int
-hash_fd_blake256(int fd, const char *fname, int decode_hex, unsigned char hash[])
+hash_fd_blake256(int fd, const char *fname, int decode_hex, unsigned char hash[], void *salt)
 {
 	struct libblake_blake256_state state;
-	return hash_fd_blake(fd, fname, decode_hex, hash, &state,
-	                     (void (*)(void *))&libblake_blake256_init,
+	return hash_fd_blake(fd, fname, decode_hex, hash, &state, salt,
+	                     (void (*)(void *, void *))&libblake_blake256_init2,
 	                     (size_t (*)(void *, const void *, size_t))&libblake_blake256_update,
 	                     &libblake_blake256_digest_get_required_input_size,
 	                     (void (*)(void *, void *, size_t, size_t, const char *, unsigned char[]))&libblake_blake256_digest);
 }
 
 static int
-hash_fd_blake384(int fd, const char *fname, int decode_hex, unsigned char hash[])
+hash_fd_blake384(int fd, const char *fname, int decode_hex, unsigned char hash[], void *salt)
 {
 	struct libblake_blake384_state state;
-	return hash_fd_blake(fd, fname, decode_hex, hash, &state,
-	                     (void (*)(void *))&libblake_blake384_init,
+	return hash_fd_blake(fd, fname, decode_hex, hash, &state, salt,
+	                     (void (*)(void *, void *))&libblake_blake384_init2,
 	                     (size_t (*)(void *, const void *, size_t))&libblake_blake384_update,
 	                     &libblake_blake384_digest_get_required_input_size,
 	                     (void (*)(void *, void *, size_t, size_t, const char *, unsigned char[]))&libblake_blake384_digest);
 }
 
 static int
-hash_fd_blake512(int fd, const char *fname, int decode_hex, unsigned char hash[])
+hash_fd_blake512(int fd, const char *fname, int decode_hex, unsigned char hash[], void *salt)
 {
 	struct libblake_blake512_state state;
-	return hash_fd_blake(fd, fname, decode_hex, hash, &state,
-	                     (void (*)(void *))&libblake_blake512_init,
+	return hash_fd_blake(fd, fname, decode_hex, hash, &state, salt,
+	                     (void (*)(void *, void *))&libblake_blake512_init2,
 	                     (size_t (*)(void *, const void *, size_t))&libblake_blake512_update,
 	                     &libblake_blake512_digest_get_required_input_size,
 	                     (void (*)(void *, void *, size_t, size_t, const char *, unsigned char[]))&libblake_blake512_digest);
@@ -140,13 +140,13 @@ hash_fd(int fd, const char *fname, int decode_hex, unsigned char hash[])
 	int ret;
 
 	if (length == 224)
-		ret = hash_fd_blake224(fd, fname, decode_hex, hash);
+		ret = hash_fd_blake224(fd, fname, decode_hex, hash, salt);
 	else if (length == 256)
-		ret = hash_fd_blake256(fd, fname, decode_hex, hash);
+		ret = hash_fd_blake256(fd, fname, decode_hex, hash, salt);
 	else if (length == 384)
-		ret = hash_fd_blake384(fd, fname, decode_hex, hash);
+		ret = hash_fd_blake384(fd, fname, decode_hex, hash, salt);
 	else if (length == 512)
-		ret = hash_fd_blake512(fd, fname, decode_hex, hash);
+		ret = hash_fd_blake512(fd, fname, decode_hex, hash, salt);
 	else
 		abort();
 
@@ -156,6 +156,8 @@ hash_fd(int fd, const char *fname, int decode_hex, unsigned char hash[])
 int
 main(int argc, char *argv[])
 {
+	const char *salt_str = NULL;
+	uint_least8_t salt_buf[32];
 	int status = 0;
 	int output_case;
 	char newline;
@@ -179,6 +181,11 @@ main(int argc, char *argv[])
 	case 'U':
 		flag_upper = 1;
 		flag_lower = 0;
+		break;
+	case 'S':
+		if (salt_str)
+			usage();
+		salt_str = ARG();
 		break;
 	case 'x':
 		flag_hex = 1;
@@ -204,6 +211,11 @@ main(int argc, char *argv[])
 
 	if (!length)
 		length = 224;
+
+	if (salt_str) {
+		parse_salt(salt_buf, salt_str, length <= 256 ? 16 : 32);
+		salt = salt_buf;
+	}
 
 	newline = flag_zero ? '\0' : '\n';
 	if (flag_check) {

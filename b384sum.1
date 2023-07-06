@@ -3,7 +3,7 @@
 b384sum - Compute and check BLAKE-384 message digests
 .SH SYNOPSIS
 .B b384sum
-[-c | -B | -L | -U] [-xz]
+[-c | -B | -L | -U] [-S salt] [-xz]
 .RI [ file "] ..."
 .SH DESCRIPTION
 Print or check BLAKE-384 checksums.
@@ -33,6 +33,26 @@ option is also used.
 .TP
 .B -L
 Output checksums in lower-case hexadecimal representation. (Default)
+.TP
+.BI "-S " salt
+Specify a 32-byte salt that the BLAKE-384 algorithm shall use.
+This salt shall be expressed in full length hexadecimal: 64
+hexadecimal digits, or rather 32 pairs of hexadecimal digits,
+ordered from left to right to specify the values from index 0
+to the last byte. In each pair, the left digit stores the high
+bits of the byte, and the right digit stores the low bits of
+the byte. For example, the digit pair
+.B 80
+represents a byte with the decimal value 128, whereas the
+digit pair
+.B 08
+represents a byte with the decimal value 8. The pairs
+are joined without any delimiters, and no byte may be
+omitted. So, for a salt where each byte's value is its
+index, the salt is expressed as,
+.BR 000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f ,
+however each letter may be either small or capital.
+If no salt is specified, an all-zeroes salt is used.
 .TP
 .B -U
 Output checksums in upper-case hexadecimal representation.

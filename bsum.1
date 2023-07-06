@@ -3,7 +3,7 @@
 bsum - Compute and check BLAKE message digests
 .SH SYNOPSIS
 .B bsum
-[-l bits] [-c | -B | -L | -U] [-xz]
+[-l bits] [-c | -B | -L | -U] [-S salt] [-xz]
 .RI [ file "] ..."
 .SH DESCRIPTION
 Print or check BLAKE checksums.
@@ -37,6 +37,29 @@ Output checksums in lower-case hexadecimal representation. (Default)
 .BI "-l " bits
 Select version of the BLAKE algorithm. Valid values
 are 224 (default), 256, 384, and 512.
+.TP
+.BI "-S " salt
+Specify a 16-byte (for the 224 and 256 bit versions) or
+32-byte salt (for the 384 and 512 bit versions) that the
+BLAKE algorithm shall use. This salt shall be expressed
+in full length hexadecimal: 32 (for 16-bytes) or 64
+(for 32-bytes) hexadecimal digits, or rather 16 or 32 pairs
+of hexadecimal digits, ordered from left to right to specify
+the values from index 0 to the last byte. In each pair,
+the left digit stores the high bits of the byte, and the
+right digit stores the low bits of the byte. For example,
+the digit pair
+.B 80
+represents a byte with the decimal value 128, whereas the
+digit pair
+.B 08
+represents a byte with the decimal value 8. The pairs
+are joined without any delimiters, and no byte may be
+omitted. So, for a 16 byte salt where each byte's value
+is its index, the salt is expressed as,
+.BR 000102030405060708090a0b0c0d0e0f ,
+however each letter may be either small or capital.
+If no salt is specified, an all-zeroes salt is used.
 .TP
 .B -U
 Output checksums in upper-case hexadecimal representation.

@@ -226,3 +226,39 @@ hash_and_print(const char *path, size_t hashlen, int decode_hex, char newline, i
 	free(hex);
 	return 0;
 }
+
+
+void
+parse_salt(uint_least8_t *salt, const char *s, size_t required_length)
+{
+	size_t i;
+
+	for (i = 0; i < required_length; i++, s = &s[2]) {
+		if (!s[0] || !s[1])
+			goto too_short;
+		if (!isxdigit(s[0]) || !isxdigit(s[1]))
+			goto not_hexadecimal;
+
+		salt[i] = (uint_least8_t)((((s[0] & 15) + (s[0] > '9' ? 9 : 0)) << 4) |
+		                            (s[1] & 15) + (s[1] > '9' ? 9 : 0));
+	}
+
+	if (*s)
+		goto too_long;
+
+	return;
+
+not_hexadecimal:
+	fprintf(stderr, "%s: specified salt contains non-hexadecimal-digit character\n", argv0);
+	exit(2);
+
+too_short:
+	fprintf(stderr, "%s: specified salt is shorter than expected, should be %zu hexadecimal digits\n",
+	                argv0, required_length * 2);
+	exit(2);
+
+too_long:
+	fprintf(stderr, "%s: specified salt is longer than expected, should be %zu hexadecimal digits\n",
+	                argv0, required_length * 2);
+	exit(2);
+}
