@@ -2,12 +2,13 @@ NAME
 	blakesum - Checksum utilities for the BLAKE-family of hashing functions
 
 SYNOPSIS
-	bsum [-l bits] [-c | -B | -L | -U] [-xz] [file] ...
-	b224sum [-c | -B | -L | -U] [-xz] [file] ...
-	b256sum [-c | -B | -L | -U] [-xz] [file] ...
-	b384sum [-c | -B | -L | -U] [-xz] [file] ...
-	b512sum [-c | -B | -L | -U] [-xz] [file] ...
-	b2sum [-l bits | -X bits] [-c | -B | -L | -U] [-sxz] [file] ...
+	bsum [-l bits] [-S salt] [-c | -B | -L | -U] [-xz] [file] ...
+	b224sum [-S salt] [-c | -B | -L | -U] [-xz] [file] ...
+	b256sum [-S salt] [-c | -B | -L | -U] [-xz] [file] ...
+	b384sum [-S salt] [-c | -B | -L | -U] [-xz] [file] ...
+	b512sum [-S salt] [-c | -B | -L | -U] [-xz] [file] ...
+	b2sum [-l bits | -X bits] [-K key] [-P pepper] [-S salt] \
+		[-c | -B | -L | -U] [-sxz] [file] ...
 
 DESCRIPTION
 	Print or check BLAKE, BLAKE2, or BLAKE2X checksums.
@@ -38,6 +39,21 @@ OPTIONS
 		or <tab>, or if they contain a <newline>, unless the
 		-z option is also used.
 
+	-K key
+		(Only available in b2sum)
+		Specify a key (which is used for MAC and PRF), that is
+		up to 32 bytes (if the -s option is used) or 64 bytes
+		(otherwise) long, that the algorithm shall use. The
+		key shall be expressed in hexadecimal: each byte in the
+		key shall be expressed, from left to right, as a pairs
+		of hexadecimal digits where highest bits in each byte
+		is stored in the left digit in its pair and the lowest
+		bits in each byte is stored in the right digit in its
+		pair. No delimiters are used, so for a 4 byte key where
+		each byte's value is its index, the key is expessed as
+		00010203, however each letter may be either small or
+		capital. The key may not be empty.
+
 	-L	Output checksums in lower-case hexadecimal
 		representation. (Default)
 
@@ -51,6 +67,44 @@ OPTIONS
 			of 8 between 8 and 512, inclusively, or if
 			the -s option is used between 8 and 256,
 			inclusively. (Default is maximum.)
+
+	-P pepper
+		(Only available in b2sum)
+		Specify an 8-byte (if the -s option is used) or 16-byte
+		pepper ("personalisation") (otherwise) that the algorithm
+		shall use. This pepper shall be expressed in full length
+		hexadecimal: 16 (for 8-byte) or 32 (for 16-byte)
+		hexadecimal digits, or rather 8 or 16 pairs of hexadecimal
+		digits, ordered from left to right to specify the values
+		from index 0 to the last byte. In each pair, the left
+		digit stores the high bits of the byte, and the right
+		digit stores the low bits of the byte. For example, the
+		digit pair 80 represents a byte with the decimal value
+		128, whereas the digit pair 08 represents a byte with
+		the decimal value 8. The pairs are joined without any
+		delimiters, and no byte may be omitted. So, for a 8 byte
+		pepper where each byte's value is its index, the pepper
+		is expressed as 0001020304050607, however each letter
+		may be either small or capital. If no pepper is specified,
+		an all-zeroes pepper is used.
+
+	-S salt
+		Specify a salt that the algorithm shall use. The
+		size of the salt depends on which algorithm used.
+		This salt shall be expressed in full length hexadecimal.
+		The decimal digits are logically groupped in pairs that
+		are ordered from left to right to specify the values
+		from index 0 to the last byte. In each pair, the left
+		digit stores the high bits of the byte, and the right
+		digit stores the low bits of the byte. For example,
+		the digit pair 80 represents a byte with the decimal
+		value 128, whereas the digit pair 08 represents a byte
+		with the decimal value 8. The pairs are joined without
+		any delimiters, and no byte may be omitted. So, for a
+		16 byte salt where each byte's value is its index, the
+		salt is expressed as 000102030405060708090a0b0c0d0e0f,
+		however each letter may be either small or capital. If
+		no salt is specified, an all-zeroes salt is used.
 
 	-s	(Only available in b2sum)
 		Use BLAKE2s instead of BLAKE2b.

@@ -17,7 +17,7 @@ static void *salt = NULL;
 static void
 usage(void)
 {
-	fprintf(stderr, "usage: %s%s [-c | -B | -L | -U] [-S salt] [-xz] [file] ...",
+	fprintf(stderr, "usage: %s%s [-S salt] [-c | -B | -L | -U] [-xz] [file] ...\n",
 	        argv0, lenght_by_command_name ? "" : " [-l bits]");
 	exit(2);
 }

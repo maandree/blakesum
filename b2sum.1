@@ -3,7 +3,7 @@
 b2sum - Compute and check BLAKE2 message digests
 .SH SYNOPSIS
 .B b2sum
-[-l bits | -X bits] [-c | -B | -L | -U] [-sxz]
+[-l bits | -X bits] [-K key] [-P pepper] [-S salt] [-c | -B | -L | -U] [-sxz]
 .RI [ file "] ..."
 .SH DESCRIPTION
 Print or check BLAKE2 checksums, using BLAKE2b by default.
@@ -31,6 +31,22 @@ contain a <newline>, unless the
 .B -z
 option is also used.
 .TP
+.BI "-K " key
+Specify a key (which is used for MAC and PRF), that is
+up to 32 bytes (if the
+.B -s
+option is used) or 64 bytes (otherwise) long, that the
+algorithm shall use. The key shall be expressed in
+hexadecimal: each byte in the key shall be expressed, from
+left to right, as a pairs of hexadecimal digits where highest
+bits in each byte is stored in the left digit in its pair and
+the lowest bits in each byte is stored in the right digit in
+its pair. No delimiters are used, so for a 4 byte key where
+each byte's value is its index, the key is expessed as
+.BR 00010203 ,
+however each letter may be either small or capital.
+The key may not be empty.
+.TP
 .B -L
 Output checksums in lower-case hexadecimal representation. (Default)
 .TP
@@ -40,6 +56,54 @@ between 8 and 512, inclusively, or if the
 .B -s
 option is used between 8 and 256, inclusively.
 (Default is maximum.)
+.TP
+.BI "-P " pepper
+Specify an 8-byte (if the
+.B -s
+option is used) or 16-byte pepper (\(dqpersonalisation\(dq)
+(otherwise) that the algorithm shall use. This pepper shall
+be expressed in full length hexadecimal: 16 (for 8-byte) or 32
+(for 16-byte) hexadecimal digits, or rather 8 or 16 pairs
+of hexadecimal digits, ordered from left to right to specify
+the values from index 0 to the last byte. In each pair,
+the left digit stores the high bits of the byte, and the
+right digit stores the low bits of the byte. For example,
+the digit pair
+.B 80
+represents a byte with the decimal value 128, whereas the
+digit pair
+.B 08
+represents a byte with the decimal value 8. The pairs
+are joined without any delimiters, and no byte may be
+omitted. So, for a 8 byte pepper where each byte's value
+is its index, the pepper is expressed as
+.BR 0001020304050607 ,
+however each letter may be either small or capital.
+If no pepper is specified, an all-zeroes pepper is used.
+.TP
+.BI "-S " salt
+Specify a 8-byte (if the
+.B -s
+option is used) or 16-byte salt
+(otherwise) that the algorithm shall use. This salt shall
+be expressed in full length hexadecimal: 16 (for 8-byte) or 32
+(for 16-byte) hexadecimal digits, or rather 8 or 16 pairs
+of hexadecimal digits, ordered from left to right to specify
+the values from index 0 to the last byte. In each pair,
+the left digit stores the high bits of the byte, and the
+right digit stores the low bits of the byte. For example,
+the digit pair
+.B 80
+represents a byte with the decimal value 128, whereas the
+digit pair
+.B 08
+represents a byte with the decimal value 8. The pairs
+are joined without any delimiters, and no byte may be
+omitted. So, for a 8 byte salt where each byte's value
+is its index, the salt is expressed as
+.BR 0001020304050607 ,
+however each letter may be either small or capital.
+If no salt is specified, an all-zeroes salt is used.
 .TP
 .B -s
 Use BLAKE2s instead of BLAKE2b.

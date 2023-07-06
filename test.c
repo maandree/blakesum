@@ -363,7 +363,7 @@ main(void)
 	failed |= check_kat_file("kat/blake2b", "BLAKE2b", &hash_blake2b);
 	failed |= check_kat_file("kat/blake2xs", "BLAKE2Xs", &hash_blake2xs);
 	failed |= check_kat_file("kat/blake2xb", "BLAKE2Xb", &hash_blake2xb);
-	/* TODO test b2sum -cLUxz, implicit -L, restrictions on -l/-X, and file operand */
+	/* TODO test b2sum -cLUxzSPK, implicit -L, restrictions on -l/-X, and file operand */
 
 	return failed;
 }

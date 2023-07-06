@@ -3,7 +3,7 @@
 b256sum - Compute and check BLAKE-256 message digests
 .SH SYNOPSIS
 .B b256sum
-[-c | -B | -L | -U] [-S salt] [-xz]
+[-S salt] [-c | -B | -L | -U] [-xz]
 .RI [ file "] ..."
 .SH DESCRIPTION
 Print or check BLAKE-256 checksums.
@@ -49,7 +49,7 @@ digit pair
 represents a byte with the decimal value 8. The pairs
 are joined without any delimiters, and no byte may be
 omitted. So, for a salt where each byte's value is its
-index, the salt is expressed as,
+index, the salt is expressed as
 .BR 000102030405060708090a0b0c0d0e0f ,
 however each letter may be either small or capital.
 If no salt is specified, an all-zeroes salt is used.

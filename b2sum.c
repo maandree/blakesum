@@ -13,16 +13,20 @@ static int flag_hex = 0;
 static int flag_zero = 0;
 static int length = 0;
 static long long int xlength = 0;
+static void *key = NULL;
+static size_t key_len = 0;
+static void *salt = NULL;
+static void *pepper = NULL;
 
 static size_t hashlen;
 
 static void
 usage(void)
 {
-	/* TODO add support for key (-K), salt (-S), and personalization (-P) */
 	/* TODO add support for parallel versions */
 	/* TODO add support for tree hashing */
-	fprintf(stderr, "usage: %s [-l bits | -X bits] [-c | -B | -L | -U] [-sxz] [file] ...", argv0);
+	fprintf(stderr, "usage: %s [-l bits | -X bits] [-K key] [-P pepper] [-S salt]"
+	                " [-c | -B | -L | -U] [-sxz] [file] ...\n", argv0);
 	exit(2);
 }
 
@@ -43,15 +47,37 @@ hash_fd_blake2bs(int fd, const char *fname, int decode_hex, unsigned char hash[]
 	if (flag_small) {
 		memset(&params2s, 0, sizeof(params2s));
 		params2s.digest_len = (uint_least8_t)length;
+		params2s.key_len = (uint_least8_t)key_len;
 		params2s.fanout = 1;
 		params2s.depth = 1;
+		if (salt)
+			memcpy(params2s.salt, salt, sizeof(params2s.salt));
+		if (pepper)
+			memcpy(params2s.pepper, pepper, sizeof(params2s.pepper));
 		libblake_blake2s_init(&state2s, &params2s);
+		if (key) {
+			buf = erealloc(buf, size = 8 << 10);
+			len = 64;
+			memcpy(buf, key, len);
+			off += libblake_blake2s_update(&state2s, key, len);
+		}
 	} else {
 		memset(&params2b, 0, sizeof(params2b));
 		params2b.digest_len = (uint_least8_t)length;
+		params2b.key_len = (uint_least8_t)key_len;
 		params2b.fanout = 1;
 		params2b.depth = 1;
+		if (salt)
+			memcpy(params2b.salt, salt, sizeof(params2b.salt));
+		if (pepper)
+			memcpy(params2b.pepper, pepper, sizeof(params2b.pepper));
 		libblake_blake2b_init(&state2b, &params2b);
+		if (key) {
+			buf = erealloc(buf, size = 8 << 10);
+			len = 128;
+			memcpy(buf, key, len);
+			off += libblake_blake2b_update(&state2b, key, len);
+		}
 	}
 	for (;;) {
 		if (len == size)
@@ -118,17 +144,39 @@ hash_fd_blake2xbs(int fd, const char *fname, int decode_hex, unsigned char hash[
 	if (flag_small) {
 		memset(&params2xs, 0, sizeof(params2xs));
 		params2xs.digest_len = (uint_least8_t)length;
+		params2xs.key_len = (uint_least8_t)key_len;
 		params2xs.fanout = 1;
 		params2xs.depth = 1;
 		params2xs.xof_len = (uint_least16_t)xlength;
+		if (salt)
+			memcpy(params2xs.salt, salt, sizeof(params2xs.salt));
+		if (pepper)
+			memcpy(params2xs.pepper, pepper, sizeof(params2xs.pepper));
 		libblake_blake2xs_init(&state2xs, &params2xs);
+		if (key) {
+			buf = erealloc(buf, size = 8 << 10);
+			len = 64;
+			memcpy(buf, key, len);
+			off += libblake_blake2xs_update(&state2xs, key, len);
+		}
 	} else {
 		memset(&params2xb, 0, sizeof(params2xb));
 		params2xb.digest_len = (uint_least8_t)length;
+		params2xb.key_len = (uint_least8_t)key_len;
 		params2xb.fanout = 1;
 		params2xb.depth = 1;
 		params2xb.xof_len = (uint_least32_t)xlength;
+		if (salt)
+			memcpy(params2xb.salt, salt, sizeof(params2xb.salt));
+		if (pepper)
+			memcpy(params2xb.pepper, pepper, sizeof(params2xb.pepper));
 		libblake_blake2xb_init(&state2xb, &params2xb);
+		if (key) {
+			buf = erealloc(buf, size = 8 << 10);
+			len = 128;
+			memcpy(buf, key, len);
+			off += libblake_blake2xb_update(&state2xb, key, len);
+		}
 	}
 	for (;;) {
 		if (len == size)
@@ -204,6 +252,12 @@ hash_fd(int fd, const char *fname, int decode_hex, unsigned char hash[])
 int
 main(int argc, char *argv[])
 {
+	const char *key_str = NULL;
+	uint_least8_t key_buf[128];
+	const char *salt_str = NULL;
+	uint_least8_t salt_buf[16];
+	const char *pepper_str = NULL;
+	uint_least8_t pepper_buf[16];
 	int status = 0;
 	int output_case;
 	char newline;
@@ -222,6 +276,21 @@ main(int argc, char *argv[])
 	case 'U':
 		flag_upper = 1;
 		flag_lower = 0;
+		break;
+	case 'K':
+		if (key_str)
+			usage();
+		key_str = ARG();
+		break;
+	case 'S':
+		if (salt_str)
+			usage();
+		salt_str = ARG();
+		break;
+	case 'P':
+		if (pepper_str)
+			usage();
+		pepper_str = ARG();
 		break;
 	case 's':
 		flag_small = 1;
@@ -265,6 +334,22 @@ main(int argc, char *argv[])
 		fprintf(stderr, "%s: valid arguments for -l\n", argv0);
 	else if (flag_small && xlength > 524280LL)
 		fprintf(stderr, "%s: valid arguments for -X\n", argv0);
+
+	if (key_str) {
+		memset(key_buf, 0, sizeof(key_buf));
+		key_len = parse_key(key_buf, key_str, flag_small ? 32 : 64);
+		key = key_buf;
+	}
+
+	if (pepper_str) {
+		parse_pepper(pepper_buf, pepper_str, flag_small ? 8 : 16);
+		pepper = pepper_buf;
+	}
+
+	if (salt_str) {
+		parse_salt(salt_buf, salt_str, flag_small ? 8 : 16);
+		salt = salt_buf;
+	}
 
 	hashlen = flag_extended ? (size_t)xlength : (size_t)length;
 	length /= 8;

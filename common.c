@@ -227,9 +227,8 @@ hash_and_print(const char *path, size_t hashlen, int decode_hex, char newline, i
 	return 0;
 }
 
-
-void
-parse_salt(uint_least8_t *salt, const char *s, size_t required_length)
+static void
+parse_salt_or_pepper(uint_least8_t *out, const char *s, size_t required_length, const char *type)
 {
 	size_t i;
 
@@ -239,8 +238,8 @@ parse_salt(uint_least8_t *salt, const char *s, size_t required_length)
 		if (!isxdigit(s[0]) || !isxdigit(s[1]))
 			goto not_hexadecimal;
 
-		salt[i] = (uint_least8_t)((((s[0] & 15) + (s[0] > '9' ? 9 : 0)) << 4) |
-		                            (s[1] & 15) + (s[1] > '9' ? 9 : 0));
+		out[i] = (uint_least8_t)((((s[0] & 15) + (s[0] > '9' ? 9 : 0)) << 4) |
+		                           (s[1] & 15) + (s[1] > '9' ? 9 : 0));
 	}
 
 	if (*s)
@@ -249,16 +248,71 @@ parse_salt(uint_least8_t *salt, const char *s, size_t required_length)
 	return;
 
 not_hexadecimal:
-	fprintf(stderr, "%s: specified salt contains non-hexadecimal-digit character\n", argv0);
+	fprintf(stderr, "%s: specified %s contains non-hexadecimal-digit character\n", argv0, type);
 	exit(2);
 
 too_short:
-	fprintf(stderr, "%s: specified salt is shorter than expected, should be %zu hexadecimal digits\n",
-	                argv0, required_length * 2);
+	fprintf(stderr, "%s: specified %s is shorter than expected, should be %zu hexadecimal digits\n",
+	                argv0, type, required_length * 2);
 	exit(2);
 
 too_long:
-	fprintf(stderr, "%s: specified salt is longer than expected, should be %zu hexadecimal digits\n",
-	                argv0, required_length * 2);
+	fprintf(stderr, "%s: specified %s is longer than expected, should be %zu hexadecimal digits\n",
+	                argv0, type, required_length * 2);
+	exit(2);
+}
+
+void
+parse_salt(uint_least8_t *salt, const char *s, size_t required_length)
+{
+	parse_salt_or_pepper(salt, s, required_length, "salt");
+}
+
+void
+parse_pepper(uint_least8_t *pepper, const char *s, size_t required_length)
+{
+	parse_salt_or_pepper(pepper, s, required_length, "pepper");
+}
+
+size_t
+parse_key(uint_least8_t *key, const char *s, size_t maximum_length)
+{
+	size_t i;
+
+	if (!*s)
+		goto empty_key;
+
+	for (i = 0; i < maximum_length; i++, s = &s[2]) {
+		if (!s[0])
+			break;
+		if (!s[1])
+			goto odd_length;
+		if (!isxdigit(s[0]) || !isxdigit(s[1]))
+			goto not_hexadecimal;
+
+		key[i] = (uint_least8_t)((((s[0] & 15) + (s[0] > '9' ? 9 : 0)) << 4) |
+		                           (s[1] & 15) + (s[1] > '9' ? 9 : 0));
+	}
+
+	if (*s)
+		goto too_long;
+
+	return i;
+
+empty_key:
+	fprintf(stderr, "%s: specified key is empty\n", argv0);
+	exit(2);
+
+odd_length:
+	fprintf(stderr, "%s: specified key contains an odd number of hexadecimal digits\n", argv0);
+	exit(2);
+
+not_hexadecimal:
+	fprintf(stderr, "%s: specified key contains non-hexadecimal-digit character\n", argv0);
+	exit(2);
+
+too_long:
+	fprintf(stderr, "%s: specified key is longer than allowed, should be at most %zu hexadecimal digits\n",
+	                argv0, maximum_length * 2);
 	exit(2);
 }
