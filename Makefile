@@ -28,14 +28,14 @@ SRC =\
 	$(HDR)\
 	test.c
 
-# Known answers tests 
+# Known answer tests
 KAT_FILES =\
-        kat/blake2b\
-        kat/blake2bp\
-        kat/blake2s\
-        kat/blake2sp\
-        kat/blake2xb\
-        kat/blake2xs
+	kat/blake2b\
+	kat/blake2bp\
+	kat/blake2s\
+	kat/blake2sp\
+	kat/blake2xb\
+	kat/blake2xs
 
 
 all: $(BIN) test
