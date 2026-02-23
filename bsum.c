@@ -12,7 +12,7 @@ static int flag_upper = 0;
 static int flag_hex = 0;
 static int flag_zero = 0;
 static int length;
-static void *salt = NULL;
+static void *flag_salt = NULL;
 
 static void
 usage(void)
@@ -85,7 +85,7 @@ hash_fd_blake(int fd, const char *fname, int decode_hex, unsigned char hash[], v
 	req = get_buf_size_func(len, 0, NULL);
 	if (req > size)
 		buf = erealloc(buf, size);
-	libblake_blake224_digest(state, buf, len, 0, NULL, hash);
+	digest_func(state, buf, len, 0, NULL, hash);
 	free(buf);
 	return 0;
 }
@@ -140,13 +140,13 @@ hash_fd(int fd, const char *fname, int decode_hex, unsigned char hash[])
 	int ret;
 
 	if (length == 224)
-		ret = hash_fd_blake224(fd, fname, decode_hex, hash, salt);
+		ret = hash_fd_blake224(fd, fname, decode_hex, hash, flag_salt);
 	else if (length == 256)
-		ret = hash_fd_blake256(fd, fname, decode_hex, hash, salt);
+		ret = hash_fd_blake256(fd, fname, decode_hex, hash, flag_salt);
 	else if (length == 384)
-		ret = hash_fd_blake384(fd, fname, decode_hex, hash, salt);
+		ret = hash_fd_blake384(fd, fname, decode_hex, hash, flag_salt);
 	else if (length == 512)
-		ret = hash_fd_blake512(fd, fname, decode_hex, hash, salt);
+		ret = hash_fd_blake512(fd, fname, decode_hex, hash, flag_salt);
 	else
 		abort();
 
@@ -214,7 +214,7 @@ main(int argc, char *argv[])
 
 	if (salt_str) {
 		parse_salt(salt_buf, salt_str, length <= 256 ? 16 : 32);
-		salt = salt_buf;
+		flag_salt = salt_buf;
 	}
 
 	newline = flag_zero ? '\0' : '\n';

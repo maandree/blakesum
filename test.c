@@ -214,7 +214,14 @@ hashx(unsigned char **msg, size_t msglen, size_t *msgsize,
 	ssize_t r;
 	int status;
 
+	(void) msgsize;
+	(void) testno;
+	(void) test_lineno;
+	(void) path;
+
 	if (keylen) {
+		(void) key;
+		(void) keysize;
 		/* KEY OPTION IS NOT YET IMPLEMENTED */
 		*outlen = hashlen;
 		if (*outsize < hashlen) {
@@ -248,7 +255,7 @@ hashx(unsigned char **msg, size_t msglen, size_t *msgsize,
 				ERROR("Internal test error: %s\n", strerror(errno));
 			close(output_pipe[1]);
 		}
-		execv(argv[0], (void *const)argv);
+		execv(argv[0], *(char ***)(void *)&argv);
 		ERROR("Internal test error: %s\n", strerror(errno));
 		/* $covered}$ */
 

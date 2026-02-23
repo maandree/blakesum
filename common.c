@@ -239,7 +239,7 @@ parse_salt_or_pepper(uint_least8_t *out, const char *s, size_t required_length, 
 			goto not_hexadecimal;
 
 		out[i] = (uint_least8_t)((((s[0] & 15) + (s[0] > '9' ? 9 : 0)) << 4) |
-		                           (s[1] & 15) + (s[1] > '9' ? 9 : 0));
+		                          ((s[1] & 15) + (s[1] > '9' ? 9 : 0)));
 	}
 
 	if (*s)
@@ -291,7 +291,7 @@ parse_key(uint_least8_t *key, const char *s, size_t maximum_length)
 			goto not_hexadecimal;
 
 		key[i] = (uint_least8_t)((((s[0] & 15) + (s[0] > '9' ? 9 : 0)) << 4) |
-		                           (s[1] & 15) + (s[1] > '9' ? 9 : 0));
+		                          ((s[1] & 15) + (s[1] > '9' ? 9 : 0)));
 	}
 
 	if (*s)
